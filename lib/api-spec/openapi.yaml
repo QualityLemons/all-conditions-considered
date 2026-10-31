@@ -1,0 +1,92 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+paths:
+  /submissions:
+    post:
+      operationId: createSubmission
+      summary: Send a show suggestion or advertising enquiry to the private inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "201":
+          description: Received by the private inbox
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionReceipt"
+        "400":
+          description: Invalid submission
+        "429":
+          description: Too many requests
+        "503":
+          description: Inbox temporarily unavailable
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    SubmissionInput:
+      type: object
+      required: [kind, name, email, requestId]
+      properties:
+        kind:
+          type: string
+          enum: [show, advertising]
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        requestId:
+          type: string
+          format: uuid
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot; leave blank
+        details:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 3000
+    SubmissionReceipt:
+      type: object
+      required: [reference]
+      properties:
+        reference:
+          type: string
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
